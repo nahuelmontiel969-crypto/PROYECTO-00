@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEURALSYS</title>
+    <style>
+        :root { 
+            --bg-void: #030508; 
+            --panel-bg: linear-gradient(145deg, #0a0e17, #080b12); 
+            --border-glow: rgba(0, 243, 255, 0.1); 
+            --neon-cyan: #00f3ff; 
+            --neon-purple: #bc13fe; 
+            --neon-pink: #ff2a6d; 
+            --text-main: #d1d5db; 
+            --text-dim: #4b5563; 
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100dvh; width: 100vw; overflow: hidden; background: var(--bg-void); color: var(--text-main); font-family: 'Courier New', Courier, monospace; color-scheme: dark; }
+        .app-shell { position: relative; z-index: 1; display: flex; flex-direction: column; height: 100dvh; border: 1px solid var(--border-glow); }
+        header { padding: 15px; background: #080b12; border-bottom: 1px solid var(--border-glow); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .logo { font-size: 1.2rem; font-weight: bold; letter-spacing: 4px; color: #fff; text-shadow: 0 0 8px var(--neon-cyan); }
+        .logo span { color: var(--neon-cyan); }
+        .hud-xp { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--text-dim); }
+        .xp-track { width: 60px; height: 3px; background: #1f2937; border-radius: 2px; overflow: hidden; }
+        .xp-fill { height: 100%; width: 0%; background: var(--neon-cyan); box-shadow: 0 0 6px var(--neon-cyan); transition: width 0.4s ease; }
+        main { flex: 1; overflow-y: auto; padding: 15px; }
+        .view { display: none; } .view.active { display: block; }
+        nav { display: flex; background: #080b12; border-top: 1px solid var(--border-glow); flex-shrink: 0; }
+        .tab { flex: 1; padding: 15px 0; background: none; border: none; border-top: 2px solid transparent; color: var(--text-dim); font-family: inherit; font-size: 0.85rem; font-weight: bold; text-transform: uppercase; }
+        .tab.active { color: var(--neon-cyan); border-top-color: var(--neon-cyan); background: linear-gradient(to top, rgba(0, 243, 255, 0.05), transparent); }
+        .card { background: var(--panel-bg); border: 1px solid var(--border-glow); border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        input, select, textarea { width: 100%; padding: 12px; margin-bottom: 10px; background: #0d1117; border: 1px solid #1f2937; color: var(--text-main); border-radius: 4px; font-family: inherit; font-size: 16px; outline: none; }
+        textarea { min-height: 100px; resize: vertical; }
+        .row { display: flex; gap: 10px; margin-bottom: 10px; }
+        .row > * { flex: 1; margin-bottom: 0; }
+        .btn-main { width: 100%; padding: 14px; background: transparent; color: var(--neon-cyan); border: 1px solid var(--neon-cyan); border-radius: 4px; font-family: inherit; font-size: 15px; font-weight: bold; text-transform: uppercase; cursor: pointer; }
+        .btn-sec { padding: 12px; background: #0d1117; color: var(--text-dim); border: 1px solid #1f2937; border-radius: 4px; font-family: inherit; font-size: 13px; cursor: pointer; text-align: center; }
+        .status-text { font-size: 0.7rem; color: var(--neon-purple); margin-top: 8px; display: block; text-transform: uppercase; text-align: center; }
+        .tasks { display: flex; flex-direction: column; gap: 12px; padding-bottom: 20px; }
+        .task { background: linear-gradient(145deg, #0a0e17, #080b12); border-left: 3px solid var(--neon-purple); border:1px solid #111827; border-left-width: 3px; border-radius: 4px; padding: 15px; cursor: pointer; }
+        .task.done { opacity: 0.3; }
+        .task.done h4 { text-decoration: line-through; color: var(--text-dim); }
+        .task h4 { font-size: 0.95rem; margin-bottom: 6px; color: #fff; }
+        .task p { font-size: 0.8rem; color: #9ca3af; margin-bottom: 10px; white-space: pre-wrap; }
+        .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .tag { font-size: 0.6rem; padding: 3px 6px; border-radius: 2px; text-transform: uppercase; font-weight: bold; }
+        .tag.alarm { color: var(--neon-pink); border: 1px solid var(--neon-pink); background: rgba(255, 42, 109, 0.05); }
+        .tag.media { color: var(--neon-cyan); border: 1px solid rgba(0, 243, 255, 0.3); background: rgba(0, 243, 255, 0.05); }
+        .media-container audio { width: 100%; height: 35px; margin-top: 8px; filter: invert(1) hue-rotate(180deg); opacity: 0.8; }
+        .yt-wrap { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; overflow: hidden; margin-top: 10px; border-radius: 4px; }
+        .yt-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+        .folder-card { background: linear-gradient(145deg, #0a0e17, #080b12); border: 1px solid var(--border-glow); padding: 15px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; cursor: pointer; }
+        .back-link { color: var(--neon-pink); font-size: 0.85rem; margin-bottom: 15px; display: inline-block; cursor: pointer; }
+        .section-title { color: var(--text-dim); font-size: 0.75rem; text-align: center; margin-bottom: 20px; letter-spacing: 3px; text-transform: uppercase; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-box { background: linear-gradient(145deg, #0a0e17, #080b12); border: 1px solid var(--border-glow); padding: 20px 10px; text-align: center; border-radius: 6px; }
+        .stat-val { font-size: 2rem; font-weight: bold; color: var(--neon-cyan); margin-bottom: 5px; }
+        .stat-lbl { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; }
+        .alarm-item { border-bottom: 1px solid #111827; padding: 12px 0; color: var(--neon-pink); font-size: 0.85rem; }
+        .alarm-item span { display: block; color: var(--text-main); font-size: 0.8rem; margin-top: 4px; }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <header>
+        <div class="logo">NEURAL<span>SYS</span></div>
+        <div class="hud-xp">
+            <span id="levelDisplay">NVL 1</span>
+            <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+        </div>
+    </header>
+
+    <main>
+        <section class="view active" id="viewMissions">
+            <div class="card">
+                <input type="text" id="taskTitle" placeholder="Título de la misión...">
+                <textarea id="taskNotes" placeholder="Letras, acordes o notas extensas..."></textarea>
+                <div class="row">
+                    <select id="dimSelect"><option value="Mente">Mente</option><option value="Cuerpo">Cuerpo</option><option value="Enfoque">Enfoque</option></select>
+                    <select id="folderSelect"><option value="">Sin Carpeta</option></select>
+                </div>
+                <div class="row">
+                    <input type="datetime-local" id="alarmInput">
+                </div>
+                <div class="row">
+                    <button class="btn-sec" id="btnLoadMusic">🎵 Canción</button>
+                    <button class="btn-sec" id="btnRecAudio">🎤 Voz</button>
+                </div>
+                <input type="text" id="ytInput" placeholder="Link de YouTube (opcional)">
+                <input type="file" id="musicFileInput" accept="audio/*" style="display:none;">
+                <button class="btn-main" id="btnAddTask" style="margin-top:10px;">Inyectar en Sistema</button>
+                <span id="recStatus" class="status-text">Sistema inactivo</span>
+            </div>
+            <div class="tasks" id="taskList"></div>
+        </section>
+
+        <section class="view" id="viewFolders">
+            <div id="folderContainer">
+                <div class="section-title">Archivos de Datos</div>
+                <div id="folderList"></div>
+                <button class="btn-main" id="btnAddFolder" style="margin-top:15px;">+ Nueva Colección</button>
+            </div>
+            <div id="folderDetailView" style="display:none;">
+                <span class="back-link" id="btnBackFolder">← VOLVER AL SISTEMA</span>
+                <div class="section-title" id="folderDetailName"></div>
+                <div class="card">
+                    <input type="text" id="innerTaskTitle" placeholder="Añadir objetivo a esta carpeta...">
+                    <button class="btn-main" id="btnAddInnerTask">Guardar</button>
+                </div>
+                <div class="tasks" id="innerTaskList"></div>
+            </div>
+        </section>
+
+        <section class="view" id="viewInsights">
+            <div class="section-title">Análisis de Rendimiento</div>
+            <div class="grid-3">
+                <div class="stat-box"><div class="stat-val" id="statToday">0</div><div class="stat-lbl">Hoy</div></div>
+                <div class="stat-box"><div class="stat-val" id="statDim" style="color:var(--neon-purple);">N/A</div><div class="stat-lbl">Dominante</div></div>
+                <div class="stat-box"><div class="stat-val" id="statStreak" style="color:var(--neon-pink);">0</div><div class="stat-lbl">Racha</div></div>
+            </div>
+            <div class="card" style="text-align: left;">
+                <div class="section-title" style="text-align:left; margin-bottom:15px; color:var(--neon-pink);">Próximas Alarmas Programadas</div>
+                <div id="alarmList"></div>
+            </div>
+        </section>
+    </main>
+
+    <nav>
+        <button class="tab active" data-view="viewMissions">Misiones</button>
+        <button class="tab" data-view="viewFolders">Carpetas</button>
+        <button class="tab" data-view="viewInsights">Datos</button>
+    </nav>
+</div>
+<script>
+const DB = {
+    db: null,
+    async init() {
+        return new Promise((resolve, reject) => {
+            const req = indexedDB.open('NeuralSysV3', 1);
+            req.onupgradeneeded = e => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('tasks')) db.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
+                if (!db.objectStoreNames.contains('folders')) db.createObjectStore('folders', { keyPath: 'id', autoIncrement: true });
+            };
+            req.onsuccess = e => { this.db = e.target.result; resolve(); };
+            req.onerror = () => reject("DB Error");
+        });
+    },
+    _tx(s, m="readonly") { return this.db.transaction(s, m).objectStore(s); },
+    getAll(s) { return new Promise(r => { let req = this._tx(s).getAll(); req.onsuccess = () => r(req.result); }); },
+    add(s, d) { return new Promise((r, j) => { let req = this._tx(s, "readwrite").add(d); req.onsuccess = () => r(req.result); req.onerror = () => j(); }); },
+    put(s, d) { return new Promise((r, j) => { let req = this._tx(s, "readwrite").put(d); req.onsuccess = () => r(); req.onerror = () => j(); }); }
+};
+
+const Media = {
+    rec: null, chunks: [], isRec: false, voiceB64: null, musicB64: null,
+    init() {
+        document.getElementById('btnRecAudio').addEventListener('click', () => this.toggleRec());
+        document.getElementById('btnLoadMusic').addEventListener('click', () => document.getElementById('musicFileInput').click());
+        document.getElementById('musicFileInput').addEventListener('change', (e) => this.handleFile(e));
+    },
+    async toggleRec() {
+        if (this.isRec) { this.rec.stop(); this.isRec = false; document.getElementById('btnRecAudio').innerText = "🎤 Voz"; return; }
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this.rec = new MediaRecorder(stream); this.chunks = [];
+            this.rec.ondataavailable = e => this.chunks.push(e.data);
+            this.rec.onstop = () => {
+                const r = new FileReader(); r.onloadend = () => { this.voiceB64 = r.result; document.getElementById('recStatus').innerText = "Audio capturado"; }; r.readAsDataURL(new Blob(this.chunks));
+                stream.getTracks().forEach(t => t.stop());
+            };
+            this.rec.start(); this.isRec = true;
+            document.getElementById('recStatus').innerText = "⏸️ GRABANDO...";
+            document.getElementById('btnRecAudio').innerText = "⏹️ Parar";
+        } catch(e) { alert("Micrófono bloqueado"); }
+    },
+    handleFile(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const r = new FileReader(); r.onloadend = () => { this.musicB64 = r.result; document.getElementById('btnLoadMusic').innerText = "✅ " + file.name.substring(0,10) + "..."; }; r.readAsDataURL(file);
+    },
+    flush() { const v = this.voiceB64, m = this.musicB64; this.voiceB64 = null; this.musicB64 = null; document.getElementById('recStatus').innerText = "Sistema inactivo"; document.getElementById('btnLoadMusic').innerText = "🎵 Canción"; document.getElementById('musicFileInput').value = ''; return {v, m}; }
+};
+
+const App = {
+    xp: 0, lvl: 1, openFolder: null,
+    async init() {
+        await DB.init(); Media.init(); this.bind(); await this.refresh();
+        if (Notification.permission === "default") await Notification.requestPermission();
+        setInterval(() => this.checkAlarms(), 10000);
+    },
+    bind() {
+        document.getElementById('btnAddTask').addEventListener('click', () => this.add('main'));
+        document.getElementById('btnAddInnerTask').addEventListener('click', () => this.add('inner'));
+        document.getElementById('btnBackFolder').addEventListener('click', () => this.closeFolderDetail());
+        document.getElementById('btnAddFolder').addEventListener('click', () => { const n = prompt("Nombre del archivo:"); if(n) DB.add('folders', {name:n}).then(() => this.refresh()); });
+        document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            t.classList.add('active'); document.getElementById(t.dataset.view).classList.add('active');
+            if(t.dataset.view === 'viewInsights') this.stats();
+        }));
+    },
+    ytId(url) { const m = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/); return (m && m[7].length===11) ? m[7] : false; },
+    async add(ctx) {
+        let title, notes, folder, media;
+        if (ctx === 'inner') { title = document.getElementById('innerTaskTitle').value.trim(); notes = ""; folder = this.openFolder; media = {v:null, m:null}; document.getElementById('innerTaskTitle').value = ''; } else { title = document.getElementById('taskTitle').value.trim(); notes = document.getElementById('taskNotes').value; folder = document.getElementById('folderSelect').value || "General"; media = Media.flush(); document.getElementById('taskTitle').value = ''; document.getElementById('taskNotes').value = ''; document.getElementById('ytInput').value = ''; document.getElementById('alarmInput').value = ''; }
+        if (!title) return;
+        await DB.add('tasks', { title, notes, folder, dimension: ctx==='inner'?'Enfoque':document.getElementById('dimSelect').value, completed:false, createdAt:new Date().toISOString(), completedAt:null, voice:media.v, music:media.m, youtube:ctx==='inner'?null:document.getElementById('ytInput').value.trim(), alarm:ctx==='inner'?null:document.getElementById('alarmInput').value||null, alarmFired:false });
+        await this.refresh(); if(ctx === 'inner' && this.openFolder) this.openDir(this.openFolder);
+    },
+    async checkAlarms() {
+        const now = new Date().getTime(); const tasks = await DB.getAll('tasks');
+        for (const t of tasks) {
+            if(t.alarm && !t.completed && !t.alarmFired && new Date(t.alarm).getTime() <= now) {
+                if (Notification.permission === "granted") new Notification("ALARMA NEURAL", { body: t.title });
+                t.alarmFired = true; await DB.put('tasks', t);
+            }
+        }
+    },
+    async complete(id) {
+        const tasks = await DB.getAll('tasks'); const t = tasks.find(x => x.id === id); if(t.completed) return;
+        t.completed = true; t.completedAt = new Date().toISOString(); await DB.put('tasks', t);
+        this.xp += 15; this.lvl = Math.floor(Math.sqrt(this.xp / 150)) + 1;
+        await this.refresh(); if(this.openFolder) this.openDir(this.openFolder);
+    },
+    async refresh() { await this.renderMain(); await this.renderFolders(); this.hud(); },
+    html(t) {
+        const c = t.dimension==='Cuerpo'?'var(--neon-pink)':t.dimension==='Mente'?'var(--neon-cyan)':'var(--neon-purple)';
+        let m = '';
+        if(t.music) m += `<audio controls src="${t.music}" class="media-container"></audio>`;
+        if(t.voice) m += `<audio controls src="${t.voice}" class="media-container" style="margin-top:5px;"></audio>`;
+        if(t.youtube) { const id = this.ytId(t.youtube); if(id) m += `<div class="yt-wrap"><iframe src="https://www.youtube.com/embed/${id}" allow="autoplay; encrypted-media" allowfullscreen></iframe></div>`; }
+        let tags = `<span class="tag" style="color:${c}; border:1px solid ${c}; background: ${c}11">${t.dimension}</span>`;
+        if(t.alarm && !t.completed) tags += `<span class="tag alarm">ALERTA</span>`;
+        if(t.music || t.youtube || t.voice) tags += `<span class="tag media">MEDIA</span>`;
+        return `<div class="task ${t.completed?'done':''}" style="border-left-color:${c}" onclick="App.complete(${t.id})">
+            <h4>${t.title}</h4>
+            ${t.notes ? `<p>${t.notes}</p>` : ''}
+            <div class="tags">${tags}</div>
+            ${m}
+        </div>`;
+    },
+    async renderMain() { const t = await DB.getAll('tasks'); document.getElementById('taskList').innerHTML = t.filter(x => !x.folder || x.folder === "General").sort((a,b)=>a.completed-b.completed).map(x=>this.html(x)).join(''); },
+    async renderFolders() {
+        const f = await DB.getAll('folders');
+        document.getElementById('folderList').innerHTML = f.map(x=>`<div class="folder-card" onclick="App.openDir('${x.name}')"><span>📁 ${x.name}</span></div>`).join('');
+        document.getElementById('folderSelect').innerHTML = '<option value="">Sin Carpeta</option>' + f.map(x=>`<option value="${x.name}">${x.name}</option>`).join('');
+    },
+    async openDir(name) {
+        this.openFolder = name;
+        document.getElementById('folderContainer').style.display = 'none';
+        document.getElementById('folderDetailView').style.display = 'block';
+        document.getElementById('folderDetailName').innerText = "// " + name.toUpperCase();
+        const t = await DB.getAll('tasks');
+        document.getElementById('innerTaskList').innerHTML = t.filter(x=>x.folder===name).sort((a,b)=>a.completed-b.completed).map(x=>this.html(x)).join('');
+    },
+    closeFolderDetail() { this.openFolder = null; document.getElementById('folderContainer').style.display = 'block'; document.getElementById('folderDetailView').style.display = 'none'; },
+    hud() {
+        document.getElementById('levelDisplay').innerText = `NVL ${this.lvl}`;
+        const need = Math.pow(this.lvl, 2)*150, prev = Math.pow(this.lvl-1, 2)*150;
+        document.getElementById('xpFill').style.width = `${Math.min(((this.xp-prev)/(need-prev))*100, 100)}%`;
+    },
+    async stats() {
+        const tasks = await DB.getAll('tasks'); const today = new Date().toDateString();
+        const doneToday = tasks.filter(t => t.completed && new Date(t.completedAt).toDateString() === today);
+        const d = {Mente:0,Cuerpo:0,Enfoque:0}; doneToday.forEach(t => d[t.dimension]++);
+        const dom = Object.entries(d).sort((a,b)=>b[1]-a[1])[0];
+        let streak=0; const days=new Set(tasks.filter(t=>t.completed).map(t=>new Date(t.completedAt).toDateString())); let dt=new Date(); while(days.has(dt.toDateString())){streak++; dt.setDate(dt.getDate()-1);}
+        document.getElementById('statToday').innerText = doneToday.length;
+        document.getElementById('statDim').innerText = dom[1]>0?dom[0]:"N/A";
+        document.getElementById('statStreak').innerText = streak;
+        const alarms = tasks.filter(t=>t.alarm && !t.completed).sort((a,b)=>new Date(a.alarm)-new Date(b.alarm));
+        document.getElementById('alarmList').innerHTML = alarms.length===0 ? "<p style='color:var(--text-dim); font-size:0.8rem; text-align:center; padding:20px 0;'>Sin objetivos pendientes en el sistema.</p>" : alarms.map(t=>`<div class="alarm-item">⏰ ${new Date(t.alarm).toLocaleString()}<span>${t.title}</span></div>`).join('');
+    }
+};
+document.addEventListener('DOMContentLoaded', () => App.init());
+</script>
+</body>
+</html>
