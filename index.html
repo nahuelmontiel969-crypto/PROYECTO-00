@@ -18,7 +18,7 @@
       --text-dim: #4b5563;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
-    body { background-color: var(--bg-void); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 90px; }
+    body { background-color: var(--bg-void); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 110px; }
     header { background: var(--panel-bg); border-bottom: 1px solid var(--border-glow); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
     h1 { color: var(--neon-cyan); font-size: 1rem; text-shadow: 0 0 10px rgba(0,243,255,0.4); }
     main { padding: 12px; display: flex; flex-direction: column; gap: 15px; }
@@ -151,13 +151,14 @@
     </div>
   </main>
 
-  <!-- REPRODUCTOR FLOTANTE GLOBAL -->
+  <!-- REPRODUCTOR FLOTANTE GLOBAL CON MASTERIZADOR DE VOZ INTEGRADO -->
   <div id="globalPlayerBar">
     <div class="row" style="justify-content: space-between;">
       <span id="globalPlayerTitle" style="font-size: 0.85rem; color: var(--neon-cyan); font-weight: bold;">Reproduciendo...</span>
       <button class="btn btn-danger" onclick="app.stopGlobalAudio()" style="padding: 2px 6px; font-size: 0.7rem;">✕ Cerrar</button>
     </div>
-    <audio id="globalAudioElement" controls style="width:100%; height: 35px;"></audio>
+    <audio id="globalAudioElement" crossorigin="anonymous" controls style="width:100%; height: 35px;"></audio>
+    <div style="font-size: 0.7rem; color: var(--neon-purple); text-align: center;">⚡ Canal Studio Pro (Compresor y Ecualizador Activos)</div>
   </div>
 
   <script>
@@ -229,6 +230,12 @@
         this.editingAudio = null;
         this.editingFile = null;
         this.editingFileName = null;
+        
+        // Web Audio API Elements para limpieza y calidad pro
+        this.audioCtx = null;
+        this.audioSourceNode = null;
+        this.compressorNode = null;
+        this.eqNode = null;
       }
 
       async init() {
@@ -498,6 +505,43 @@
         titleElement.innerText = `🎵 Reproduciendo: ${decodedTitle}`;
         audioElement.src = decodedAudio;
         playerBar.style.display = 'flex';
+
+        // Inicializar Web Audio API para procesar la voz (Canal Pro Studio)
+        try {
+          if (!this.audioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            this.audioCtx = new AudioContextClass();
+          }
+          if (this.audioCtx.state === 'suspended') {
+            this.audioCtx.resume();
+          }
+
+          if (!this.audioSourceNode) {
+            this.audioSourceNode = this.audioCtx.createMediaElementSource(audioElement);
+            
+            // 1. Ecualizador de realce vocal (presencia y brillo)
+            this.eqNode = this.audioCtx.createBiquadFilter();
+            this.eqNode.type = 'highshelf';
+            this.eqNode.frequency.value = 2500;
+            this.eqNode.gain.value = 4.5;
+
+            // 2. Compresor de dinámica (nivelador de volumen tipo estudio)
+            this.compressorNode = this.audioCtx.createDynamicsCompressor();
+            this.compressorNode.threshold.value = -20;
+            this.compressorNode.knee.value = 25;
+            this.compressorNode.ratio.value = 10;
+            this.compressorNode.attack.value = 0.002;
+            this.compressorNode.release.value = 0.2;
+
+            // Cadena de enrutamiento: Fuente -> Ecualizador -> Compresor -> Salida de parlantes
+            this.audioSourceNode.connect(this.eqNode);
+            this.eqNode.connect(this.compressorNode);
+            this.compressorNode.connect(this.audioCtx.destination);
+          }
+        } catch (e) {
+          console.log("Web Audio API warning:", e);
+        }
+
         audioElement.play().catch(e => console.log("Play bloqueado por navegador", e));
 
         if ('mediaSession' in navigator) {
