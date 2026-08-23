@@ -128,7 +128,6 @@
 
         <div style="border-top:1px dashed var(--border-glow); padding-top:10px;">
           <label style="font-size: 0.8rem; color: var(--neon-cyan); display: block; margin-bottom: 5px;">📎 Adjuntar Archivo, Beat o Pista (MP3, WAV, PDF, etc.):</label>
-          <!-- SE HABILITÓ AUDIO/* PARA PERMITIR CUALQUIER PISTA O CANCIÓN -->
           <input type="file" id="fileInput" accept="audio/*,image/*,application/pdf,.doc,.docx" style="font-size: 0.8rem; padding: 6px;">
           <div id="fileInfo" class="file-preview"></div>
         </div>
@@ -537,7 +536,7 @@
           document.getElementById('recStatus').innerText = 'Audio actual cargado';
         } else {
           document.getElementById('audioPreview').style.display = 'none';
-          document.getElementById('audioPreview'].src = '';
+          document.getElementById('audioPreview').src = '';
           document.getElementById('recStatus').innerText = 'Listo para grabar';
         }
 
@@ -549,7 +548,7 @@
 
         document.getElementById('formTitle').innerText = 'EDITAR REGISTRO / CANCIÓN';
         document.getElementById('saveBtn').innerText = 'Actualizar Cambios';
-        document.getElementById('cancelEditDir').style.display = 'block';
+        document.getElementById('cancelEditBtn').style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
 
