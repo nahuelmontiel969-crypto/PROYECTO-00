@@ -4,18 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NEURALSYS - Multi-Artist Songwriter</title>
-  <!-- Configuración para instalar como App en el Celular -->
   <meta name="theme-color" content="#030508">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="data:application/manifest+json;charset=utf-8,{
-    %22name%22:%22NEURALSYS_ARTISTS%22,
-    %22short_name%22:%22NeuralSys%22,
+    %22name%22:%22NEURALSYS%20artists%22,
+    %22short_name%22:%22NEURALSYS%20Artists%22,
     %22start_url%22:%.22./index.html%.22,
     %22display%22:%22standalone%22,
     %22background_color%22:%22%23030508%22,
-    %22theme_color%22:%22%2300f3ff%22,
+    %22theme_color%22:%22%23030508%22,
+    %22id%22:%22/%22,
+    %22description%22:%22Aplicaci%C3%B3n%20de%20gesti%C3%B3n%20de%20proyectos%20y%20canciones%20para%20artistas.%22,
     %22icons%22:[{
       %22src%22:%.22https://cdn-icons-png.flaticon.com/512/3076/3076897.png%.22,
       %22sizes%22:%.22512x512%.22,
@@ -68,12 +69,6 @@
   </header>
 
   <main>
-    <!-- BOTÓN DE INSTALACIÓN RÁPIDA -->
-    <div id="installBanner" class="card" style="display:none; border-color: var(--neon-purple); background: rgba(188,19,254,0.05); text-align: center;">
-      <p style="font-size: 0.85rem; color: var(--neon-purple);">📱 ¡Instala la App en tu pantalla de inicio!</p>
-      <button class="btn" id="installBtn" style="border-color: var(--neon-purple); color: var(--neon-purple); margin-top: 5px;">Instalar Aplicación</button>
-    </div>
-
     <!-- PANTALLA DE LOGIN -->
     <div id="loginSection" class="card" style="max-width: 400px; margin: 10px auto; width: 100%; border-color: var(--neon-cyan);">
       <div class="section-title" style="text-align: center;">🔐 ACCESO DE ARTISTAS</div>
@@ -159,25 +154,6 @@
   </main>
 
   <script>
-    // Lógica para el botón de instalación (PWA)
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installBanner').style.display = 'block';
-    });
-
-    document.getElementById('installBtn').addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          document.getElementById('installBanner').style.display = 'none';
-        }
-        deferredPrompt = null;
-      }
-    });
-
     class NeuralDB {
       constructor() {
         this.dbName = 'NeuralDB_MultiArtistV1';
@@ -521,7 +497,7 @@
           document.getElementById('recStatus').innerText = 'Audio actual cargado';
         } else {
           document.getElementById('audioPreview').style.display = 'none';
-          document.getElementById('audioPreview').src = '';
+          document.getElementById('audioPreview'].src = '';
           document.getElementById('recStatus').innerText = 'Listo para grabar';
         }
 
