@@ -35,6 +35,7 @@
     .row { display: flex; gap: 8px; align-items: center; width: 100%; }
     .section-title { color: var(--neon-cyan); font-size: 0.95rem; margin-bottom: 5px; border-bottom: 1px solid var(--border-glow); padding-bottom: 4px; }
     .song-text { white-space: pre-wrap; font-size: 0.9rem; color: var(--text-main); background: #030508; padding: 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); }
+    .file-preview { margin-top: 5px; font-size: 0.8rem; color: var(--neon-cyan); word-break: break-all; }
   </style>
 </head>
 <body>
@@ -79,8 +80,15 @@
         <option value="high">Prioridad Alta (Urgente)</option>
       </select>
 
-      <div class="row">
-        <button class="btn" onclick="app.saveTask()" id="saveBtn" style="flex:1;">Guardar Texto</button>
+      <!-- Selector de Archivos (PDF, Fotos, etc.) -->
+      <div style="border-top:1px dashed var(--border-glow); padding-top:10px;">
+        <label style="font-size: 0.8rem; color: var(--neon-cyan); display: block; margin-bottom: 5px;">📎 Adjuntar Archivo (PDF, Foto, etc.):</label>
+        <input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx" style="font-size: 0.8rem; padding: 6px;">
+        <div id="fileInfo" class="file-preview"></div>
+      </div>
+
+      <div class="row" style="margin-top:5px;">
+        <button class="btn" onclick="app.saveTask()" id="saveBtn" style="flex:1;">Guardar Registro</button>
         <button class="btn btn-danger" onclick="app.cancelEdit()" id="cancelEditBtn" style="display:none; padding: 10px;">Cancelar</button>
       </div>
 
@@ -101,7 +109,7 @@
   <script>
     class NeuralDB {
       constructor() {
-        this.dbName = 'NeuralDB_MobileV2';
+        this.dbName = 'NeuralDB_MobileV3';
         this.db = null;
       }
       async init() {
@@ -156,6 +164,8 @@
         this.isRecording = false;
         this.editingId = null;
         this.editingAudio = null;
+        this.editingFile = null;
+        this.editingFileName = null;
       }
 
       async init() {
@@ -254,8 +264,11 @@
         const title = document.getElementById('taskTitle').value.trim();
         const desc = document.getElementById('taskDesc').value.trim();
         const priority = document.getElementById('taskPriority').value;
+        const fileInput = document.getElementById('fileInput');
 
-        if (!title && !desc && !this.audioBlob) return alert('Escribe un título, letra o graba un audio');
+        if (!title && !desc && !this.audioBlob && fileInput.files.length === 0 && !this.editingFile) {
+          return alert('Escribe algo, graba audio o adjunta un archivo');
+        }
 
         let audioBase64 = this.editingAudio;
         if (this.audioBlob) {
@@ -266,27 +279,34 @@
           });
         }
 
+        let fileBase64 = this.editingFile;
+        let fileName = this.editingFileName;
+        if (fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          fileName = file.name;
+          fileBase64 = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+        }
+
+        const dataPayload = {
+          folderId: this.currentFolderId,
+          title: title || 'Sin Título',
+          desc,
+          priority,
+          audio: audioBase64,
+          file: fileBase64,
+          fileName: fileName,
+          date: new Date().toLocaleDateString()
+        };
+
         if (this.editingId) {
-          // Actualizar registro existente
-          await this.db.update('items', {
-            id: this.editingId,
-            folderId: this.currentFolderId,
-            title: title || 'Sin Título',
-            desc,
-            priority,
-            audio: audioBase64,
-            date: new Date().toLocaleDateString()
-          });
+          dataPayload.id = this.editingId;
+          await this.db.update('items', dataPayload);
         } else {
-          // Crear nuevo registro
-          await this.db.add('items', {
-            folderId: this.currentFolderId,
-            title: title || 'Sin Título',
-            desc,
-            priority,
-            audio: audioBase64,
-            date: new Date().toLocaleDateString()
-          });
+          await this.db.add('items', dataPayload);
         }
 
         this.cancelEdit();
@@ -307,12 +327,23 @@
         filtered.reverse().forEach(item => {
           const div = document.createElement('div');
           div.className = `task-item ${item.priority}`;
+          
+          let fileHtml = '';
+          if (item.file) {
+            if (item.fileName && (item.fileName.endsWith('.jpg') || item.fileName.endsWith('.png') || item.fileName.endsWith('.jpeg'))) {
+              fileHtml = `<div style="margin-top:5px;"><a href="${item.file}" target="_blank"><img src="${item.file}" style="max-width:100%; max-height:150px; border-radius:4px; border:1px solid var(--border-glow);"></a></div>`;
+            } else {
+              fileHtml = `<div class="file-preview">📎 <a href="${item.file}" download="${item.fileName || 'archivo'}" style="color:var(--neon-cyan)">Descargar: ${item.fileName || 'Archivo adjunto'}</a></div>`;
+            }
+          }
+
           div.innerHTML = `
             <div class="row" style="justify-content:space-between">
               <strong style="font-size:0.95rem; color: var(--neon-cyan);">${item.title}</strong>
               <span style="font-size:0.7rem; color:var(--text-dim)">${item.date}</span>
             </div>
             ${item.desc ? `<div class="song-text">${item.desc}</div>` : ''}
+            ${fileHtml}
             ${item.audio ? `<audio controls src="${item.audio}" style="width:100%; margin-top:5px;"></audio>` : ''}
             <div class="row" style="justify-content: flex-end; gap: 5px; margin-top: 5px;">
               <button class="btn btn-edit" style="padding:4px 10px; font-size:0.75rem;" onclick="app.editItem(${item.id})">Editar</button>
@@ -333,12 +364,24 @@
         document.getElementById('taskPriority').value = item.priority || 'low';
         this.editingId = item.id;
         this.editingAudio = item.audio || null;
+        this.editingFile = item.file || null;
+        this.editingFileName = item.fileName || null;
 
         if (item.audio) {
           const audioPreview = document.getElementById('audioPreview');
           audioPreview.src = item.audio;
           audioPreview.style.display = 'block';
           document.getElementById('recStatus').innerText = 'Audio actual cargado';
+        } else {
+          document.getElementById('audioPreview').style.display = 'none';
+          document.getElementById('audioPreview').src = '';
+          document.getElementById('recStatus').innerText = 'Listo para grabar';
+        }
+
+        if (item.fileName) {
+          document.getElementById('fileInfo').innerText = `📎 Archivo actual: ${item.fileName}`;
+        } else {
+          document.getElementById('fileInfo').innerText = '';
         }
 
         document.getElementById('formTitle').innerText = 'EDITAR REGISTRO / CANCIÓN';
@@ -350,15 +393,19 @@
       cancelEdit() {
         this.editingId = null;
         this.editingAudio = null;
+        this.editingFile = null;
+        this.editingFileName = null;
         this.audioBlob = null;
         document.getElementById('taskTitle').value = '';
         document.getElementById('taskDesc').value = '';
         document.getElementById('taskPriority').value = 'low';
+        document.getElementById('fileInput').value = '';
+        document.getElementById('fileInfo').innerText = '';
         document.getElementById('audioPreview').style.display = 'none';
         document.getElementById('audioPreview').src = '';
         document.getElementById('recStatus').innerText = 'Listo para grabar';
         document.getElementById('formTitle').innerText = 'NUEVO REGISTRO / CANCIÓN';
-        document.getElementById('saveBtn').innerText = 'Guardar Texto';
+        document.getElementById('saveBtn').innerText = 'Guardar Registro';
         document.getElementById('cancelEditBtn').style.display = 'none';
       }
 
