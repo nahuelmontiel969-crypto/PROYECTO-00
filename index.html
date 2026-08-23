@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEURALSYS - Advanced Manager</title>
+  <title>NEURALSYS - Mobile Manager</title>
   <style>
     :root {
       --bg-void: #030508;
@@ -16,92 +16,83 @@
       --text-dim: #4b5563;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: monospace; }
-    body { background-color: var(--bg-void); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-    header { background: var(--panel-bg); border-bottom: 1px solid var(--border-glow); padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-    h1 { color: var(--neon-cyan); font-size: 1.2rem; text-shadow: 0 0 10px rgba(0,243,255,0.4); }
-    main { flex: 1; display: grid; grid-template-columns: 280px 1fr; overflow: hidden; }
-    aside { background: rgba(11, 17, 30, 0.5); border-right: 1px solid var(--border-glow); padding: 15px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
-    section { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; }
-    .btn { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 8px 15px; cursor: pointer; transition: 0.2s; border-radius: 4px; font-weight: bold; }
-    .btn:hover { background: var(--neon-cyan); color: var(--bg-void); box-shadow: 0 0 10px var(--neon-cyan); }
+    body { background-color: var(--bg-void); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 30px; }
+    header { background: var(--panel-bg); border-bottom: 1px solid var(--border-glow); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { color: var(--neon-cyan); font-size: 1rem; text-shadow: 0 0 10px rgba(0,243,255,0.4); }
+    main { padding: 12px; display: flex; flex-direction: column; gap: 15px; }
+    .btn { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 10px 15px; cursor: pointer; transition: 0.2s; border-radius: 4px; font-weight: bold; font-size: 0.9rem; text-align: center; }
+    .btn:active { background: var(--neon-cyan); color: var(--bg-void); }
     .btn-danger { border-color: var(--neon-pink); color: var(--neon-pink); }
-    .btn-danger:hover { background: var(--neon-pink); color: var(--bg-void); box-shadow: 0 0 10px var(--neon-pink); }
-    input, select, textarea { background: #050811; border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px; border-radius: 4px; width: 100%; outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: var(--neon-cyan); box-shadow: 0 0 5px rgba(0,243,255,0.3); }
-    .card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 15px; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
-    .folder-item { padding: 10px; cursor: pointer; border: 1px solid transparent; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; }
-    .folder-item:hover, .folder-item.active { background: rgba(0,243,255,0.05); border-color: var(--neon-cyan); }
-    .task-item { background: #050811; border-left: 4px solid var(--neon-cyan); padding: 12px; border-radius: 4px; display: flex; flex-direction: column; gap: 8px; }
+    input, select, textarea { background: #050811; border: 1px solid var(--border-glow); color: var(--text-main); padding: 12px; border-radius: 4px; width: 100%; outline: none; font-size: 0.95rem; }
+    .card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
+    .folder-item { padding: 12px; cursor: pointer; border: 1px solid var(--border-glow); border-radius: 4px; display: flex; justify-content: space-between; align-items: center; background: #050811; margin-bottom: 6px; }
+    .folder-item.active { border-color: var(--neon-cyan); background: rgba(0,243,255,0.05); }
+    .task-item { background: #050811; border-left: 4px solid var(--neon-cyan); padding: 12px; border-radius: 4px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
     .task-item.high { border-left-color: var(--neon-pink); }
     .task-item.medium { border-left-color: var(--neon-purple); }
-    .row { display: flex; gap: 10px; align-items: center; }
+    .row { display: flex; gap: 8px; align-items: center; width: 100%; }
+    .section-title { color: var(--neon-cyan); font-size: 0.95rem; margin-bottom: 5px; border-bottom: 1px solid var(--border-glow); padding-bottom: 4px; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>// NEURALSYS_OS v2.0</h1>
-    <div id="status">Sistema Activo</div>
+    <h1>// NEURALSYS_MOBILE</h1>
+    <span id="status" style="font-size: 0.8rem; color: var(--neon-cyan);">Activo</span>
   </header>
 
   <main>
-    <aside>
-      <h3>PROYECTOS / CARPETAS</h3>
+    <!-- SECCIÓN DE CARPETAS -->
+    <div class="card">
+      <div class="section-title">📁 MIS PROYECTOS Y CARPETAS</div>
       <div class="row">
-        <input type="text" id="newFolderName" placeholder="Nueva Carpeta...">
-        <button class="btn" onclick="app.createFolder()">+</button>
+        <input type="text" id="newFolderName" placeholder="Nueva carpeta...">
+        <button class="btn" onclick="app.createFolder()" style="white-space: nowrap;">Crear</button>
       </div>
-      <div id="folderList" style="display:flex; flex-direction:column; gap:8px;"></div>
-    </aside>
+      <div id="folderList" style="max-height: 150px; overflow-y: auto;"></div>
+    </div>
 
-    <section id="contentArea">
-      <div id="noFolderSelected" class="card">
-        <h3>Selecciona o crea una carpeta/proyecto a la izquierda para empezar a gestionar tus tareas y registros.</h3>
+    <!-- CONTENIDO DE LA CARPETA ACTIVA -->
+    <div id="noFolderSelected" class="card" style="text-align: center; padding: 20px;">
+      <p style="color: var(--text-dim); font-size: 0.9rem;">Selecciona o crea una carpeta arriba para ver y añadir tus registros.</p>
+    </div>
+
+    <div id="activeFolderView" class="card" style="display:none; border-color: var(--neon-cyan);">
+      <div class="row" style="justify-content: space-between;">
+        <h2 id="currentFolderName" style="color:var(--neon-cyan); font-size: 1.1rem;">Carpeta</h2>
+        <button class="btn btn-danger" onclick="app.deleteCurrentFolder()" style="padding: 6px 10px; font-size: 0.8rem;">Borrar Carpeta</button>
       </div>
 
-      <div id="activeFolderView" style="display:none; flex-direction:column; gap:20px;">
+      <div class="section-title" style="margin-top: 10px;">NUEVO REGISTRO</div>
+      <input type="text" id="taskTitle" placeholder="Título de la tarea o nota...">
+      <textarea id="taskDesc" placeholder="Escribe detalles aquí..." rows="2"></textarea>
+      
+      <select id="taskPriority">
+        <option value="low">Prioridad Baja</option>
+        <option value="medium">Prioridad Media</option>
+        <option value="high">Prioridad Alta (Urgente)</option>
+      </select>
+
+      <button class="btn" onclick="app.saveTask()">Guardar Texto</button>
+
+      <!-- Grabadora de Audio -->
+      <div style="border-top:1px dashed var(--border-glow); padding-top:10px; margin-top:5px;">
         <div class="row" style="justify-content: space-between;">
-          <h2 id="currentFolderName" style="color:var(--neon-cyan)">Carpeta</h2>
-          <button class="btn btn-danger" onclick="app.deleteCurrentFolder()">Eliminar Carpeta</button>
+          <button class="btn" id="recBtn" onclick="app.toggleRecording()" style="flex:1;">🎙️ Grabar Audio</button>
         </div>
-
-        <!-- Panel de Creación de Tareas / Notas / Audios -->
-        <div class="card">
-          <h3>NUEVO REGISTRO EN ESTE PROYECTO</h3>
-          <input type="text" id="taskTitle" placeholder="Título de la tarea o nota...">
-          <textarea id="taskDesc" placeholder="Detalles de la tarea..." rows="2"></textarea>
-          
-          <div class="row">
-            <select id="taskPriority">
-              <option value="low">Prioridad Baja</option>
-              <option value="medium">Prioridad Media</option>
-              <option value="high">Prioridad Alta (Urgente)</option>
-            </select>
-            <button class="btn" onclick="app.saveTask()">Guardar Texto</button>
-          </div>
-
-          <!-- Grabadora de Audio Funcional -->
-          <div style="border-top:1px dashed var(--border-glow); padding-top:10px; margin-top:5px;">
-            <p style="font-size: 0.9rem; margin-bottom: 5px;">Grabadora de Audio Integrada:</p>
-            <div class="row">
-              <button class="btn" id="recBtn" onclick="app.toggleRecording()">🎙️ Grabar Audio</button>
-              <span id="recStatus" style="font-size:0.8rem; color:var(--neon-pink);">Listo para grabar</span>
-            </div>
-            <audio id="audioPreview" controls style="width:100%; margin-top:10px; display:none;"></audio>
-          </div>
-        </div>
-
-        <!-- Listado de Elementos del Proyecto -->
-        <h3>REGISTROS DEL PROYECTO</h3>
-        <div id="taskList" style="display:flex; flex-direction:column; gap:10px;"></div>
+        <p id="recStatus" style="font-size:0.75rem; color:var(--neon-pink); margin-top: 5px; text-align: center;">Listo para grabar</p>
+        <audio id="audioPreview" controls style="width:100%; margin-top:8px; display:none;"></audio>
       </div>
-    </section>
+
+      <div class="section-title" style="margin-top: 15px;">REGISTROS GUARDADOS</div>
+      <div id="taskList"></div>
+    </div>
   </main>
 
   <script>
     class NeuralDB {
       constructor() {
-        this.dbName = 'NeuralDB_V2';
+        this.dbName = 'NeuralDB_MobileV1';
         this.db = null;
       }
       async init() {
@@ -158,10 +149,14 @@
         const folders = await this.db.getAll('folders');
         const list = document.getElementById('folderList');
         list.innerHTML = '';
+        if(folders.length === 0) {
+          list.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem; padding: 5px;">No hay carpetas creadas.</p>';
+          return;
+        }
         folders.forEach(f => {
           const div = document.createElement('div');
           div.className = `folder-item ${this.currentFolderId === f.id ? 'active' : ''}`;
-          div.innerHTML = `<span>📁 ${f.name}</span>`;
+          div.innerHTML = `<span>📁 ${f.name}</span> <span style="font-size:0.8rem; color:var(--neon-cyan)">Abrir ▶</span>`;
           div.onclick = () => this.selectFolder(f.id, f.name);
           list.appendChild(div);
         });
@@ -180,14 +175,14 @@
         this.currentFolderId = id;
         document.getElementById('noFolderSelected').style.display = 'none';
         document.getElementById('activeFolderView').style.display = 'flex';
-        document.getElementById('currentFolderName').innerText = `Proyecto: ${name}`;
+        document.getElementById('currentFolderName').innerText = name;
         this.loadFolders();
         this.loadItems();
       }
 
       async deleteCurrentFolder() {
         if (!this.currentFolderId) return;
-        if (!confirm('¿Borrar esta carpeta y todos sus registros?')) return;
+        if (!confirm('¿Eliminar esta carpeta y todos sus registros?')) return;
         const items = await this.db.getAll('items');
         for (let item of items) {
           if (item.folderId === this.currentFolderId) await this.db.delete('items', item.id);
@@ -212,32 +207,31 @@
             this.mediaRecorder.ondataavailable = e => this.audioChunks.push(e.data);
             this.mediaRecorder.onstop = () => {
               this.audioBlob = new Blob(this.audioChunks, { type: 'audio/webm' });
-              const audioUrl = URL.createObjectURL(this.audioBlob);
-              audioPreview.src = audioUrl;
+              audioPreview.src = URL.createObjectURL(this.audioBlob);
               audioPreview.style.display = 'block';
             };
             this.mediaRecorder.start();
             this.isRecording = true;
             recBtn.innerText = '⏹️ Detener Grabación';
-            recStatus.innerText = 'Grabando audio...';
+            recStatus.innerText = '🔴 Grabando...';
           } catch (err) {
-            alert('No se pudo acceder al micrófono. Revisa los permisos.');
+            alert('Permiso de micrófono denegado o no disponible.');
           }
         } else {
           this.mediaRecorder.stop();
           this.isRecording = false;
           recBtn.innerText = '🎙️ Grabar Audio';
-          recStatus.innerText = 'Audio listo para guardar';
+          recStatus.innerText = '✔️ Audio listo para guardar';
         }
       }
 
       async saveTask() {
-        if (!this.currentFolderId) return alert('Selecciona una carpeta primero');
+        if (!this.currentFolderId) return alert('Selecciona una carpeta');
         const title = document.getElementById('taskTitle').value.trim();
         const desc = document.getElementById('taskDesc').value.trim();
         const priority = document.getElementById('taskPriority').value;
 
-        if (!title && !this.audioBlob) return alert('Escribe un título o graba un audio');
+        if (!title && !this.audioBlob) return alert('Escribe un título o graba audio');
 
         let audioBase64 = null;
         if (this.audioBlob) {
@@ -254,10 +248,9 @@
           desc,
           priority,
           audio: audioBase64,
-          date: new Date().toLocaleString()
+          date: new Date().toLocaleDateString()
         });
 
-        // Limpiar campos
         document.getElementById('taskTitle').value = '';
         document.getElementById('taskDesc').value = '';
         document.getElementById('audioPreview').style.display = 'none';
@@ -273,7 +266,7 @@
         
         const filtered = items.filter(i => i.folderId === this.currentFolderId);
         if (filtered.length === 0) {
-          taskList.innerHTML = '<p style="color:var(--text-dim)">No hay registros en este proyecto aún.</p>';
+          taskList.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem;">No hay registros aquí.</p>';
           return;
         }
 
@@ -282,12 +275,12 @@
           div.className = `task-item ${item.priority}`;
           div.innerHTML = `
             <div class="row" style="justify-content:space-between">
-              <strong>${item.title}</strong>
-              <span style="font-size:0.75rem; color:var(--text-dim)">${item.date}</span>
+              <strong style="font-size:0.9rem">${item.title}</strong>
+              <span style="font-size:0.7rem; color:var(--text-dim)">${item.date}</span>
             </div>
-            ${item.desc ? `<p style="font-size:0.9rem">${item.desc}</p>` : ''}
+            ${item.desc ? `<p style="font-size:0.85rem">${item.desc}</p>` : ''}
             ${item.audio ? `<audio controls src="${item.audio}" style="width:100%; margin-top:5px;"></audio>` : ''}
-            <button class="btn btn-danger" style="align-self:flex-end; padding:2px 8px; font-size:0.7rem;" onclick="app.deleteItem(${item.id})">Borrar</button>
+            <button class="btn btn-danger" style="align-self:flex-end; padding:2px 8px; font-size:0.7rem;" onclick="app.deleteItem(${item.id})">Eliminar</button>
           `;
           taskList.appendChild(div);
         });
