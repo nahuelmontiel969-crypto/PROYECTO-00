@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NEURALSYS - Mobile Songwriter</title>
+  <title>NEURALSYS - Multi-Artist Songwriter</title>
   <style>
     :root {
       --bg-void: #030508;
@@ -24,6 +24,7 @@
     .btn:active { background: var(--neon-cyan); color: var(--bg-void); }
     .btn-danger { border-color: var(--neon-pink); color: var(--neon-pink); }
     .btn-edit { border-color: var(--neon-purple); color: var(--neon-purple); }
+    .btn-secondary { border-color: var(--neon-purple); color: var(--neon-purple); font-size: 0.8rem; }
     input, select, textarea { background: #050811; border: 1px solid var(--border-glow); color: var(--text-main); padding: 12px; border-radius: 4px; width: 100%; outline: none; font-size: 0.95rem; }
     textarea { min-height: 120px; resize: vertical; line-height: 1.4; }
     .card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 12px; border-radius: 6px; display: flex; flex-direction: column; gap: 10px; }
@@ -41,75 +42,109 @@
 <body>
 
   <header>
-    <h1>// NEURALSYS_MOBILE</h1>
-    <span id="status" style="font-size: 0.8rem; color: var(--neon-cyan);">Activo</span>
+    <h1>// NEURALSYS_ARTISTS</h1>
+    <div class="row" style="width: auto; gap: 10px;">
+      <span id="userDisplay" style="font-size: 0.8rem; color: var(--neon-purple); display:none;"></span>
+      <button class="btn btn-danger" id="logoutBtn" onclick="app.logout()" style="display:none; padding: 4px 8px; font-size: 0.75rem;">Salir</button>
+    </div>
   </header>
 
   <main>
-    <!-- SECCIÓN DE CARPETAS (Visible al entrar) -->
-    <div class="card" id="folderSection">
-      <div class="section-title">📁 MIS PROYECTOS Y CARPETAS</div>
-      <div class="row">
-        <input type="text" id="newFolderName" placeholder="Nueva carpeta o proyecto...">
-        <button class="btn" onclick="app.createFolder()" style="white-space: nowrap;">Crear</button>
-      </div>
-      <div id="folderList" style="max-height: 200px; overflow-y: auto;"></div>
-    </div>
-
-    <!-- ESTADO VACÍO INICIAL -->
-    <div id="noFolderSelected" class="card" style="text-align: center; padding: 20px;">
-      <p style="color: var(--text-dim); font-size: 0.9rem;">Toca una carpeta arriba para abrirla y ver tus canciones y registros.</p>
-    </div>
-
-    <!-- CONTENIDO DE LA CARPETA ACTIVA (Se muestra al entrar a una carpeta) -->
-    <div id="activeFolderView" class="card" style="display:none; border-color: var(--neon-cyan);">
-      <div class="row" style="justify-content: space-between;">
-        <button class="btn" onclick="app.backToFolders()" style="padding: 6px 10px; font-size: 0.8rem;">◀ Volver</button>
-        <h2 id="currentFolderName" style="color:var(--neon-cyan); font-size: 1rem; text-align: right;">Carpeta</h2>
-        <button class="btn btn-danger" onclick="app.deleteCurrentFolder()" style="padding: 6px 10px; font-size: 0.8rem;">Borrar</button>
-      </div>
-
-      <div class="section-title" style="margin-top: 10px;" id="formTitle">NUEVO REGISTRO / CANCIÓN</div>
-      <input type="hidden" id="editIndexId" value="">
-      <input type="text" id="taskTitle" placeholder="Título de la canción o nota...">
-      <textarea id="taskDesc" placeholder="Escribe la letra de tu canción o detalles aquí..."></textarea>
+    <!-- PANTALLA DE LOGIN -->
+    <div id="loginSection" class="card" style="max-width: 400px; margin: 20px auto; width: 100%; border-color: var(--neon-cyan);">
+      <div class="section-title" style="text-align: center;">🔐 ACCESO DE ARTISTAS</div>
+      <p style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">Inicia sesión con tu cuenta para ver tus proyectos.</p>
       
-      <select id="taskPriority">
-        <option value="low">Prioridad Baja</option>
-        <option value="medium">Prioridad Media</option>
-        <option value="high">Prioridad Alta (Urgente)</option>
-      </select>
-
-      <!-- Selector de Archivos (PDF, Fotos, etc.) -->
-      <div style="border-top:1px dashed var(--border-glow); padding-top:10px;">
-        <label style="font-size: 0.8rem; color: var(--neon-cyan); display: block; margin-bottom: 5px;">📎 Adjuntar Archivo (PDF, Foto, etc.):</label>
-        <input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx" style="font-size: 0.8rem; padding: 6px;">
-        <div id="fileInfo" class="file-preview"></div>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <input type="text" id="loginUser" placeholder="Usuario">
+        <input type="password" id="loginPass" placeholder="Contraseña">
+        <button class="btn" onclick="app.login()" style="margin-top: 5px;">Entrar</button>
+        <button class="btn btn-secondary" onclick="app.showRegisterForm()">¿No tienes cuenta? Regístrate</button>
       </div>
+    </div>
 
-      <div class="row" style="margin-top:5px;">
-        <button class="btn" onclick="app.saveTask()" id="saveBtn" style="flex:1;">Guardar Registro</button>
-        <button class="btn btn-danger" onclick="app.cancelEdit()" id="cancelEditBtn" style="display:none; padding: 10px;">Cancelar</button>
+    <!-- PANTALLA DE REGISTRO -->
+    <div id="registerSection" class="card" style="max-width: 400px; margin: 20px auto; width: 100%; border-color: var(--neon-purple); display: none;">
+      <div class="section-title" style="text-align: center;">📝 NUEVO REGISTRO DE ARTISTA</div>
+      <p style="font-size: 0.85rem; color: var(--text-dim); text-align: center;">Crea tu usuario y contraseña personal.</p>
+      
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <input type="text" id="regUser" placeholder="Elige un Usuario">
+        <input type="password" id="regPass" placeholder="Elige una Contraseña">
+        <button class="btn" onclick="app.register()" style="margin-top: 5px; border-color: var(--neon-purple); color: var(--neon-purple);">Crear Cuenta</button>
+        <button class="btn btn-secondary" onclick="app.showLoginForm()" style="border-color: var(--neon-cyan); color: var(--neon-cyan);">Volver al Login</button>
       </div>
+    </div>
 
-      <!-- Grabadora de Audio -->
-      <div style="border-top:1px dashed var(--border-glow); padding-top:10px; margin-top:5px;">
-        <div class="row" style="justify-content: space-between;">
-          <button class="btn" id="recBtn" onclick="app.toggleRecording()" style="flex:1;">🎙️ Grabar Audio / Melodía</button>
+    <!-- APLICACIÓN PRINCIPAL (Oculta hasta iniciar sesión) -->
+    <div id="appContainer" style="display: none; flex-direction: column; gap: 15px;">
+      
+      <!-- SECCIÓN DE CARPETAS -->
+      <div class="card" id="folderSection">
+        <div class="section-title">📁 MIS PROYECTOS Y CARPETAS</div>
+        <div class="row">
+          <input type="text" id="newFolderName" placeholder="Nueva carpeta o proyecto...">
+          <button class="btn" onclick="app.createFolder()" style="white-space: nowrap;">Crear</button>
         </div>
-        <p id="recStatus" style="font-size:0.75rem; color:var(--neon-pink); margin-top: 5px; text-align: center;">Listo para grabar</p>
-        <audio id="audioPreview" controls style="width:100%; margin-top:8px; display:none;"></audio>
+        <div id="folderList" style="max-height: 200px; overflow-y: auto;"></div>
       </div>
 
-      <div class="section-title" style="margin-top: 15px;">REGISTROS Y CANCIONES GUARDADAS</div>
-      <div id="taskList"></div>
+      <!-- ESTADO VACÍO INICIAL -->
+      <div id="noFolderSelected" class="card" style="text-align: center; padding: 20px;">
+        <p style="color: var(--text-dim); font-size: 0.9rem;">Toca una carpeta arriba para abrirla y ver tus canciones y registros.</p>
+      </div>
+
+      <!-- CONTENIDO DE LA CARPETA ACTIVA -->
+      <div id="activeFolderView" class="card" style="display:none; border-color: var(--neon-cyan);">
+        <div class="row" style="justify-content: space-between;">
+          <button class="btn" onclick="app.backToFolders()" style="padding: 6px 10px; font-size: 0.8rem;">◀ Volver</button>
+          <h2 id="currentFolderName" style="color:var(--neon-cyan); font-size: 1rem; text-align: right;">Carpeta</h2>
+          <button class="btn btn-danger" onclick="app.deleteCurrentFolder()" style="padding: 6px 10px; font-size: 0.8rem;">Borrar</button>
+        </div>
+
+        <div class="section-title" style="margin-top: 10px;" id="formTitle">NUEVO REGISTRO / CANCIÓN</div>
+        <input type="hidden" id="editIndexId" value="">
+        <input type="text" id="taskTitle" placeholder="Título de la canción o nota...">
+        <textarea id="taskDesc" placeholder="Escribe la letra de tu canción o detalles aquí..."></textarea>
+        
+        <select id="taskPriority">
+          <option value="low">Prioridad Baja</option>
+          <option value="medium">Prioridad Media</option>
+          <option value="high">Prioridad Alta (Urgente)</option>
+        </select>
+
+        <!-- Selector de Archivos -->
+        <div style="border-top:1px dashed var(--border-glow); padding-top:10px;">
+          <label style="font-size: 0.8rem; color: var(--neon-cyan); display: block; margin-bottom: 5px;">📎 Adjuntar Archivo (PDF, Foto, etc.):</label>
+          <input type="file" id="fileInput" accept="image/*,application/pdf,.doc,.docx" style="font-size: 0.8rem; padding: 6px;">
+          <div id="fileInfo" class="file-preview"></div>
+        </div>
+
+        <div class="row" style="margin-top:5px;">
+          <button class="btn" onclick="app.saveTask()" id="saveBtn" style="flex:1;">Guardar Registro</button>
+          <button class="btn btn-danger" onclick="app.cancelEdit()" id="cancelEditBtn" style="display:none; padding: 10px;">Cancelar</button>
+        </div>
+
+        <!-- Grabadora de Audio -->
+        <div style="border-top:1px dashed var(--border-glow); padding-top:10px; margin-top:5px;">
+          <div class="row" style="justify-content: space-between;">
+            <button class="btn" id="recBtn" onclick="app.toggleRecording()" style="flex:1;">🎙️ Grabar Audio / Melodía</button>
+          </div>
+          <p id="recStatus" style="font-size:0.75rem; color:var(--neon-pink); margin-top: 5px; text-align: center;">Listo para grabar</p>
+          <audio id="audioPreview" controls style="width:100%; margin-top:8px; display:none;"></audio>
+        </div>
+
+        <div class="section-title" style="margin-top: 15px;">REGISTROS Y CANCIONES GUARDADAS</div>
+        <div id="taskList"></div>
+      </div>
+
     </div>
   </main>
 
   <script>
     class NeuralDB {
       constructor() {
-        this.dbName = 'NeuralDB_MobileV3';
+        this.dbName = 'NeuralDB_MultiArtistV1';
         this.db = null;
       }
       async init() {
@@ -119,6 +154,7 @@
           request.onsuccess = () => { this.db = request.result; resolve(this.db); };
           request.onupgradeneeded = (e) => {
             const db = e.target.result;
+            if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'username' });
             if (!db.objectStoreNames.contains('folders')) db.createObjectStore('folders', { keyPath: 'id', autoIncrement: true });
             if (!db.objectStoreNames.contains('items')) db.createObjectStore('items', { keyPath: 'id', autoIncrement: true });
           };
@@ -128,6 +164,13 @@
         return new Promise((resolve) => {
           const tx = this.db.transaction(store, 'readonly');
           const req = tx.objectStore(store).getAll();
+          req.onsuccess = () => resolve(req.result);
+        });
+      }
+      async get(store, key) {
+        return new Promise((resolve) => {
+          const tx = this.db.transaction(store, 'readonly');
+          const req = tx.objectStore(store).get(key);
           req.onsuccess = () => resolve(req.result);
         });
       }
@@ -148,7 +191,7 @@
       async delete(store, id) {
         return new Promise((resolve) => {
           const tx = this.db.transaction(store, 'readwrite');
-          const req = tx.objectStore(store).delete(Number(id));
+          const req = tx.objectStore(store).delete(isNaN(id) ? id : Number(id));
           req.onsuccess = () => resolve();
         });
       }
@@ -157,6 +200,7 @@
     class NeuralApp {
       constructor() {
         this.db = new NeuralDB();
+        this.currentUser = null;
         this.currentFolderId = null;
         this.mediaRecorder = null;
         this.audioChunks = [];
@@ -170,18 +214,98 @@
 
       async init() {
         await this.db.init();
-        await this.loadFolders();
+        
+        // Comprobar si hay sesión guardada en este navegador
+        const savedUser = sessionStorage.getItem('neural_current_user');
+        if (savedUser) {
+          this.currentUser = savedUser;
+          this.showApp();
+        }
+      }
+
+      showRegisterForm() {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('registerSection').style.display = 'flex';
+      }
+
+      showLoginForm() {
+        document.getElementById('registerSection').style.display = 'none';
+        document.getElementById('loginSection').style.display = 'flex';
+      }
+
+      async register() {
+        const user = document.getElementById('regUser').value.trim();
+        const pass = document.getElementById('regPass').value.trim();
+
+        if (!user || !pass) {
+          return alert('Por favor llena ambos campos.');
+        }
+
+        const existing = await this.db.get('users', user);
+        if (existing) {
+          return alert('Ese usuario ya existe. Elige otro nombre.');
+        }
+
+        await this.db.add('users', { username: user, password: pass });
+        alert('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
+        document.getElementById('regUser').value = '';
+        document.getElementById('regPass').value = '';
+        this.showLoginForm();
+      }
+
+      async login() {
+        const user = document.getElementById('loginUser').value.trim();
+        const pass = document.getElementById('loginPass').value.trim();
+
+        if (!user || !pass) {
+          return alert('Ingresa usuario y contraseña.');
+        }
+
+        const dbUser = await this.db.get('users', user);
+        if (!dbUser || dbUser.password !== pass) {
+          return alert('Usuario o contraseña incorrectos.');
+        }
+
+        this.currentUser = user;
+        sessionStorage.setItem('neural_current_user', user);
+        this.showApp();
+      }
+
+      logout() {
+        this.currentUser = null;
+        sessionStorage.removeItem('neural_current_user');
+        document.getElementById('appContainer').style.display = 'none';
+        document.getElementById('loginSection').style.display = 'flex';
+        document.getElementById('userDisplay').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = 'none';
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+      }
+
+      showApp() {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('registerSection').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'flex';
+        const userDisplay = document.getElementById('userDisplay');
+        userDisplay.innerText = `👤 ${this.currentUser}`;
+        userDisplay.style.display = 'inline';
+        document.getElementById('logoutBtn').style.display = 'inline-block';
+        this.loadFolders();
       }
 
       async loadFolders() {
         const folders = await this.db.getAll('folders');
         const list = document.getElementById('folderList');
         list.innerHTML = '';
-        if(folders.length === 0) {
-          list.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem; padding: 5px;">No hay carpetas creadas.</p>';
+        
+        // Filtrar solo carpetas del usuario actual
+        const userFolders = folders.filter(f => f.owner === this.currentUser);
+
+        if(userFolders.length === 0) {
+          list.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem; padding: 5px;">No tienes carpetas creadas aún.</p>';
           return;
         }
-        folders.forEach(f => {
+        userFolders.forEach(f => {
           const div = document.createElement('div');
           div.className = `folder-item ${this.currentFolderId === f.id ? 'active' : ''}`;
           div.innerHTML = `<span>📁 ${f.name}</span> <span style="font-size:0.8rem; color:var(--neon-cyan)">Abrir ▶</span>`;
@@ -194,7 +318,7 @@
         const input = document.getElementById('newFolderName');
         const name = input.value.trim();
         if (!name) return;
-        await this.db.add('folders', { name });
+        await this.db.add('folders', { name, owner: this.currentUser });
         input.value = '';
         this.loadFolders();
       }
@@ -219,7 +343,7 @@
 
       async deleteCurrentFolder() {
         if (!this.currentFolderId) return;
-        if (!confirm('¿Eliminar esta carpeta y todas sus canciones/registros?')) return;
+        if (!confirm('¿Eliminar esta carpeta y todo su contenido?')) return;
         const items = await this.db.getAll('items');
         for (let item of items) {
           if (item.folderId === this.currentFolderId) await this.db.delete('items', item.id);
@@ -293,6 +417,7 @@
 
         const dataPayload = {
           folderId: this.currentFolderId,
+          owner: this.currentUser,
           title: title || 'Sin Título',
           desc,
           priority,
@@ -318,7 +443,7 @@
         const taskList = document.getElementById('taskList');
         taskList.innerHTML = '';
         
-        const filtered = items.filter(i => i.folderId === this.currentFolderId);
+        const filtered = items.filter(i => i.folderId === this.currentFolderId && i.owner === this.currentUser);
         if (filtered.length === 0) {
           taskList.innerHTML = '<p style="color:var(--text-dim); font-size:0.85rem;">No hay registros ni canciones aquí todavía.</p>';
           return;
@@ -387,7 +512,7 @@
         document.getElementById('formTitle').innerText = 'EDITAR REGISTRO / CANCIÓN';
         document.getElementById('saveBtn').innerText = 'Actualizar Cambios';
         document.getElementById('cancelEditBtn').style.display = 'block';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({ top: 0, behavior: 'smooth' -->
       }
 
       cancelEdit() {
