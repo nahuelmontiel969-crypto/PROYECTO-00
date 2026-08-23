@@ -42,25 +42,27 @@
   </header>
 
   <main>
-    <!-- SECCIÓN DE CARPETAS -->
-    <div class="card">
+    <!-- SECCIÓN DE CARPETAS (Lo que está en rojo: Visible apenas entras) -->
+    <div class="card" id="folderSection">
       <div class="section-title">📁 MIS PROYECTOS Y CARPETAS</div>
       <div class="row">
         <input type="text" id="newFolderName" placeholder="Nueva carpeta...">
         <button class="btn" onclick="app.createFolder()" style="white-space: nowrap;">Crear</button>
       </div>
-      <div id="folderList" style="max-height: 150px; overflow-y: auto;"></div>
+      <div id="folderList" style="max-height: 200px; overflow-y: auto;"></div>
     </div>
 
-    <!-- CONTENIDO DE LA CARPETA ACTIVA -->
+    <!-- ESTADO VACÍO INICIAL -->
     <div id="noFolderSelected" class="card" style="text-align: center; padding: 20px;">
-      <p style="color: var(--text-dim); font-size: 0.9rem;">Selecciona o crea una carpeta arriba para ver y añadir tus registros.</p>
+      <p style="color: var(--text-dim); font-size: 0.9rem;">Toca una carpeta arriba para abrirla y ver sus registros.</p>
     </div>
 
+    <!-- CONTENIDO DE LA CARPETA ACTIVA (Lo que está en verde: Oculto hasta entrar a una carpeta) -->
     <div id="activeFolderView" class="card" style="display:none; border-color: var(--neon-cyan);">
       <div class="row" style="justify-content: space-between;">
-        <h2 id="currentFolderName" style="color:var(--neon-cyan); font-size: 1.1rem;">Carpeta</h2>
-        <button class="btn btn-danger" onclick="app.deleteCurrentFolder()" style="padding: 6px 10px; font-size: 0.8rem;">Borrar Carpeta</button>
+        <button class="btn" onclick="app.backToFolders()" style="padding: 6px 10px; font-size: 0.8rem;">◀ Volver a Carpetas</button>
+        <h2 id="currentFolderName" style="color:var(--neon-cyan); font-size: 1rem; text-align: right;">Carpeta</h2>
+        <button class="btn btn-danger" onclick="app.deleteCurrentFolder()" style="padding: 6px 10px; font-size: 0.8rem;">Borrar</button>
       </div>
 
       <div class="section-title" style="margin-top: 10px;">NUEVO REGISTRO</div>
@@ -174,10 +176,18 @@
       async selectFolder(id, name) {
         this.currentFolderId = id;
         document.getElementById('noFolderSelected').style.display = 'none';
+        document.getElementById('folderSection').style.display = 'none'; // Oculta carpetas al entrar
         document.getElementById('activeFolderView').style.display = 'flex';
         document.getElementById('currentFolderName').innerText = name;
-        this.loadFolders();
         this.loadItems();
+      }
+
+      backToFolders() {
+        this.currentFolderId = null;
+        document.getElementById('activeFolderView').style.display = 'none';
+        document.getElementById('folderSection').style.display = 'flex';
+        document.getElementById('noFolderSelected').style.display = 'flex';
+        this.loadFolders();
       }
 
       async deleteCurrentFolder() {
@@ -188,10 +198,7 @@
           if (item.folderId === this.currentFolderId) await this.db.delete('items', item.id);
         }
         await this.db.delete('folders', this.currentFolderId);
-        this.currentFolderId = null;
-        document.getElementById('noFolderSelected').style.display = 'flex';
-        document.getElementById('activeFolderView').style.display = 'none';
-        this.loadFolders();
+        this.backToFolders();
       }
 
       async toggleRecording() {
