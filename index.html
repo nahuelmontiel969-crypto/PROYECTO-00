@@ -180,7 +180,7 @@
         this.currentFolderId = id;
         document.getElementById('noFolderSelected').style.display = 'none';
         document.getElementById('activeFolderView').style.display = 'flex';
-        document.getElementById('currentFolderNameinnerText') || (document.getElementById('currentFolderName').innerText = `Proyecto: ${name}`);
+        document.getElementById('currentFolderName').innerText = `Proyecto: ${name}`;
         this.loadFolders();
         this.loadItems();
       }
